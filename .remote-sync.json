@@ -13,6 +13,6 @@
   ],
   "username": "testclone",
   "watch": [],
-  "target": "/public_html/cw_prijsenlinks",
+  "target": "/public_html/cw_prijsenlinks/wp-content/plugins/cw_prijsenlinks/",
   "password": "jq369BKM"
 }

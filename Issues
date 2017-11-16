@@ -1,0 +1,13 @@
+//Ben: Geen maandprijs - aanwijzen waar die zit in correcties
+//Hollandsnieuwe: Geen internetsnelheid
+//Simpel: Geen maandprijs
+//internetsnelheid
+// Simyo: Bij geen datalimiet moet internetsnelheid EN datalimiet op 0 gezet WORDEN
+//Prepaid wordt nog meegenomen, moet eruit als abonnement_naam het bevat
+T-mobile:
+//- Geen internetsnelheid
+//- Datalimiet staat soms een hele tekst bij onbeperkt
+//- belminuten soms nog onbeperkt
+Telfort:
+//- Bij geen datalimiet moet internetsnelheid op 0 gezet WORDEN
+//- Mbit/ trimmen bij internetsnelheid

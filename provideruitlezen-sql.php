@@ -1,19 +1,13 @@
 <?php
-// Datafeed voor twee providers ophalen en opslaan (Vodafone & KPN)
-// TODO: Mail sturen alvorens nieuwe abonnementen te uploaden
-// Providers toevoegen
-//testfcvggasfasdf
-
-
-
-
+// Datafeed voor Negen providers ophalen en opslaan gelukt.
+// TODO: Mail sturen alvorens nieuwe abonnementen te uploaden, Mail sturen werkt pas als het live staat
+// Tele2 heeft nog geen feed
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // Lets the browser know it's JSON (puur voor uitlezen)
 header( "Content-Type: application/json" );
-
 
 include 'configuration.php';
 $i = 0;
@@ -41,8 +35,8 @@ foreach ($providers as $provider) {
 	} else {
 		echo 'failed';
 	}
-	// Openen van CSV bestand
 
+	// Openen van CSV bestand
 	$datafeedAbonnement = $fields = array(); $d = 0;
 	$file = fopen('datafeed/'.$provider.'/datafeed_324849.csv','r');
 	if ($file) {
@@ -55,8 +49,9 @@ foreach ($providers as $provider) {
 				$datafeedAbonnement[$d][$fields[$k]] = $value;
 			}
 			$aantalrowsDatafeed = count($row);
-			// Conversies per provider toepassen - Alles wat niet converted wordt, word verwijderd.
-			$stmt = $conn->prepare("SELECT * FROM conversietabel"); // WHERE provider_id = '$provider_id'
+
+			// Conversies per provider toepassen - Alles wat niet converted wordt, word verwijderd. provider_id 0 zijn de algemene conversies
+			$stmt = $conn->prepare("SELECT * FROM conversietabel WHERE provider_id = '0' OR provider_id = '$provider_id'");
 			$stmt->execute();
 			$conversies = $stmt->fetchAll(PDO::FETCH_ASSOC);
 			$datafeedAbonnement[$d]['id'] = $d;
@@ -66,23 +61,32 @@ foreach ($providers as $provider) {
 				$datafeedAbonnement[$d][$conversie['naar']] = $datafeedAbonnement[$d][$conversie['van']];
 				unset($datafeedAbonnement[$d][$conversie['van']]);
 			}
+
 			// Verwijderen van ongebruikte rijen in array datafeed
 			$teVerwijderenElementen = $aantalrowsDatafeed - $aantalconversies;
 			$datafeedAbonnement[$d] = array_slice($datafeedAbonnement[$d], $teVerwijderenElementen);
 
 			//Opschoonacties uitvoeren
 			$datafeedAbonnement[$d]['internetsnelheid'] = rtrim($datafeedAbonnement[$d]['internetsnelheid'], " Mbps");
-			//Toevoegen techniek
+			$datafeedAbonnement[$d]['internetsnelheid'] = rtrim($datafeedAbonnement[$d]['internetsnelheid'], "Mbit/");
+			if (empty($datafeedAbonnement[$d]['datalimiet'])) { $datafeedAbonnement[$d]['datalimiet'] = 0; $datafeedAbonnement[$d]['internetsnelheid'] = 0;}
 			if ($provider_id == 2) { $datafeedAbonnement[$d]['internetsnelheid'] = 225; }
+			if ($provider_id == 4) { $datafeedAbonnement[$d]['internetsnelheid'] = 150; }
+			if ($provider_id == 5) { $datafeedAbonnement[$d]['internetsnelheid'] = 75; }
+			if ($provider_id == 7) { $datafeedAbonnement[$d]['internetsnelheid'] = 300; }
 			$techniek = ($datafeedAbonnement[$d]['internetsnelheid'] >= '15' ? '4g' : '3g');
 			$datafeedAbonnement[$d]['techniek'] = $techniek;
+
+			if (strpos($datafeedAbonnement[$d]['datalimiet'], 'Onbeperkt') !== false) { $datafeedAbonnement[$d]['datalimiet'] = '99999'; }
 			if ($datafeedAbonnement[$d]['belminuten'] == "Onbeperkt") { $datafeedAbonnement[$d]['belminuten'] = '99999'; }
+			if ($datafeedAbonnement[$d]['belminuten'] == "onbeperkt") { $datafeedAbonnement[$d]['belminuten'] = '99999'; }
 			$d++;
 		}
 		if (!feof($file)) {
 			echo "Error: unexpected fgets() fail\n";
 		}
 		fclose($file);
+
 		//Check of iets nieuws in feed (match met abonnementen)
 		$stmt = $conn->prepare("SELECT * FROM abonnementen WHERE provider_id = '$provider_id'");
 		$stmt->execute();
@@ -97,16 +101,19 @@ foreach ($providers as $provider) {
 			$abonnementenVerwijderen['$provider_id'] = array();
 			$abonnementenVervangenVan['$provider_id'] = array();
 			$abonnementenVervangenNaar['$provider_id'] = array();
+
 			// Check of abonnementen in feed in database zitten.
 			foreach ($datafeedAbonnement as $abonnement) {
+				if ($provider_id == 6) { if (strpos($abonnement['abonnement_naam'], 'Prepaid') !== false) { echo 'break'; break; }}
 				$product_id = $abonnement['product_id'];
 				$stmt = $conn->prepare("SELECT * FROM abonnementen WHERE provider_id = '$provider_id' && product_id ='$product_id'");
 				$stmt->execute();
 				$databaseAbonnement = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 				// Als het abonnement al in database zit:
-				//print_r ($databaseAbonnement);
 				if (!empty($databaseAbonnement)) {
 					if($databaseAbonnement[0]['product_id'] !== $product_id) {
+
 					// TOEVOEGEN abonnement als hij nog niet in database zit
 					array_push ($abonnementenToevoegen['$provider_id'], $abonnement);
 					}
@@ -114,6 +121,7 @@ foreach ($providers as $provider) {
 					array_push ($abonnementenToevoegen['$provider_id'], $abonnement);
 				}
 			}
+
 			// Check of abonnementen van database in feed zitten.
 			$c = 0;
 			foreach ($datafeedAbonnement as $abonnement) {
@@ -121,11 +129,13 @@ foreach ($providers as $provider) {
 				$c++;
 			}
 			foreach ($abonnementenDatabase as $abonnement) {
+
 				// CHECK DOEN OF abonnement in array van feed voor komt in de database.
 				array_shift ($abonnement);
 				if (in_array($abonnement, $datafeedAbonnement)) {
 					echo "Abonnement uit database komt voor in feed \n";
 				}
+
 				// Als tenminste het ID overeenkomt dan vervangen:
 				else {
 					foreach ($datafeedAbonnement as $datafeedProductid) {
@@ -140,6 +150,7 @@ foreach ($providers as $provider) {
 							}
 						}
 					}
+
 					// Anders abonnement verwijderen:
 					if ($idGevonden == false) {
 						echo 'Abonnement komt NIET voor';
@@ -149,6 +160,7 @@ foreach ($providers as $provider) {
 				}
 			}
 			echo "Datafeed voor provider ".$provider_id." is gecontroleerd. \n";
+
 			// HIERONDER WORDEN DE AANPASSINGEN AAN DE DATABASE UITGEVOERD //
 			// Abonnementen uit feed die niet in database zaten (TOEVOEGEN)
 			if(!empty($abonnementenToevoegen['$provider_id'])) {
@@ -175,6 +187,7 @@ foreach ($providers as $provider) {
 					}
 				}
 			}
+
 			// De abonnementen uit database die niet meer voorkwamen in de feed (VERWIJDEREN):
 			if (!empty($abonnementenVerwijderen['$provider_id'])) {
 				echo 'Daarnaast de volgende abonnementen uit database komen niet voor in de feed:';
@@ -190,6 +203,7 @@ foreach ($providers as $provider) {
 					}
 				}
 			}
+
 			// De abonnementen die vervangen moeten worden (wel zelfde ID maar iets is veranderd)
 			if (!empty($abonnementenVervangenVan['$provider_id'])) {
 				$v = 0;
@@ -236,6 +250,7 @@ foreach ($providers as $provider) {
 	}
 	$i++;
 }
+
 // MAILEN
 			$to      = 'ronald@compareweb.org';
 			$subject = 'Database aanpassingen controleren';
