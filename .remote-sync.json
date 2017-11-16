@@ -1,0 +1,19 @@
+{
+  "logger": {
+    "title": "Remote Sync"
+  },
+  "transport": "ftp",
+  "uploadOnSave": true,
+  "useAtomicWrites": false,
+  "deleteLocal": false,
+  "hostname": "178.22.62.42",
+  "ignore": [
+    ".remote-sync.json",
+    ".git/**"
+  ],
+  "username": "testclone",
+  "password": "jq369BKM",
+  "watch": [],
+  "target": "/cw_prijsenlinks",
+  "port": "80"
+}
