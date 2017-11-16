@@ -2,7 +2,7 @@
   "logger": {
     "title": "Remote Sync"
   },
-  "transport": "scp",
+  "transport": "ftp",
   "uploadOnSave": true,
   "useAtomicWrites": false,
   "deleteLocal": false,
@@ -13,6 +13,7 @@
   ],
   "username": "testclone",
   "watch": [],
-  "target": "/cw_prijsenlinks",
-  "port": "80"
+  "target": "/public_html/cw_prijsenlinks/",
+  "port": "80",
+  "password": "jq369BKM"
 }
