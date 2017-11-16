@@ -2,7 +2,7 @@
   "logger": {
     "title": "Remote Sync"
   },
-  "transport": "ftp",
+  "transport": "scp",
   "uploadOnSave": true,
   "useAtomicWrites": false,
   "deleteLocal": false,
@@ -12,7 +12,6 @@
     ".git/**"
   ],
   "username": "testclone",
-  "password": "jq369BKM",
   "watch": [],
   "target": "/cw_prijsenlinks",
   "port": "80"
