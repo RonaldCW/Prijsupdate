@@ -1,13 +1,4 @@
-//Ben: Geen maandprijs - aanwijzen waar die zit in correcties
-//Hollandsnieuwe: Geen internetsnelheid
-//Simpel: Geen maandprijs
-//internetsnelheid
-// Simyo: Bij geen datalimiet moet internetsnelheid EN datalimiet op 0 gezet WORDEN
-//Prepaid wordt nog meegenomen, moet eruit als abonnement_naam het bevat
-T-mobile:
-//- Geen internetsnelheid
-//- Datalimiet staat soms een hele tekst bij onbeperkt
-//- belminuten soms nog onbeperkt
-Telfort:
-//- Bij geen datalimiet moet internetsnelheid op 0 gezet WORDEN
-//- Mbit/ trimmen bij internetsnelheid
+- Feed update niet altijd waardoor abonnementen niet altijd aansluiten op website van provider (nu het geval met Ben). WLM heeft dit wel opgelost. --> Mail naar Sander gestuurd.
+Volgens Sander moet je de Awin feed nog niet gebruiken omdat die niet per provider is.
+- Mail sturen alvorens prijzen worden geupdate.
+- Tele2 TOEVOEGEN

@@ -1,7 +1,4 @@
 <?php
-// Datafeed voor Negen providers ophalen en opslaan gelukt.
-// TODO: Mail sturen alvorens nieuwe abonnementen te uploaden, Mail sturen werkt pas als het live staat
-// Tele2 heeft nog geen feed
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -87,7 +84,7 @@ foreach ($providers as $provider) {
 		}
 		fclose($file);
 
-		//Check of iets nieuws in feed (match met abonnementen)
+		//Check of iets nieuws in feed (match met abonnementen) --> WERKT NOG NIET
 		$stmt = $conn->prepare("SELECT * FROM abonnementen WHERE provider_id = '$provider_id'");
 		$stmt->execute();
 		$abonnementenDatabase = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -104,12 +101,14 @@ foreach ($providers as $provider) {
 
 			// Check of abonnementen in feed in database zitten.
 			foreach ($datafeedAbonnement as $abonnement) {
-				if ($provider_id == 6) { if (strpos($abonnement['abonnement_naam'], 'Prepaid') !== false) { echo 'break'; break; }}
+				// Correcties voor enkele providers MOET DIT NOG IN APARTE FILE (denk het wel)?
+				if ($provider_id == 6) { if (strpos($abonnement['abonnement_naam'], 'Prepaid') !== false) { continue; }}
+				if ($provider_id == 5) { if (strpos($abonnement['abonnement_naam'], 'iPhone')) { continue; }}
+				if ($provider_id == 7) { if (strpos($abonnement['abonnement_naam'], '100 sms') !== false) { continue; }}
 				$product_id = $abonnement['product_id'];
 				$stmt = $conn->prepare("SELECT * FROM abonnementen WHERE provider_id = '$provider_id' && product_id ='$product_id'");
 				$stmt->execute();
 				$databaseAbonnement = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
 				// Als het abonnement al in database zit:
 				if (!empty($databaseAbonnement)) {
 					if($databaseAbonnement[0]['product_id'] !== $product_id) {
